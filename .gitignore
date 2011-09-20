@@ -1,2 +1,4 @@
 src/*.so
+*/src/*.so
 example/*.bin
+*/example/*.bin
