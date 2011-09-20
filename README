@@ -1,0 +1,26 @@
+= Miscellaneous Helper Libraries =
+
+This is a collection of miscellaneous helper libraries. Most of them are
+preferable used statically linked to your application. Simply copy the header
+and source file into your source tree and use it in your application.
+
+See the manpage misc(3) for an overview of all libraries.
+
+= Requirements =
+
+See each manpage for special requirements.
+
+= Install =
+
+Run
+	make build
+to build shared objects of all libraries (to test compilation).
+
+= License =
+
+This library is written by David Herrmann <dh.herrmann@googlemail.com> 2011 and
+the whole distribution is dedicated to the Public Domain.
+
+= Todo =
+
+- write manpages
