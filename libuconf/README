@@ -1,0 +1,33 @@
+= Universal Config Files =
+
+This package contains libraries and applications to work with universal config
+files.
+
+See the manpage uconf(3) for an introduction of the API.
+
+== Dependencies ==
+
+This library uses the "cstr" library for string handling. See:
+	http://gibhut.com/dvdhrm/libcstr
+for further information on libcstr. It should be installed into your system. If
+you want to link it statically, edit ./Makefile and edit the paths.
+
+== Install ==
+
+Run
+	make build
+to build the library.
+Run
+	make install
+to install the library and manpages into your system. Default prefix is /usr but
+you can change that with:
+	make install PREFIX=/usr
+Run
+	make uninstall PREFIX=/usr
+to remove the library from your system. Default prefix is again /usr and should
+be changed if you changed it during install.
+
+== License ==
+
+This library is written by David Herrmann <dh.herrmann@googlemail.com> 2011 and
+the whole distribution is dedicated to the Public Domain.
