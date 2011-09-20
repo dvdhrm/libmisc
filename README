@@ -19,6 +19,9 @@ Run
 	make example
 to build all examples in ./example/
 
+Bigger libraries are placed in their own directory. For instance, see 
+./libcstr/README for build instructions for libcstr.
+
 = License =
 
 This library is written by David Herrmann <dh.herrmann@googlemail.com> 2011 and
