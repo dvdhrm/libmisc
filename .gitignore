@@ -2,3 +2,9 @@ src/*.so
 */src/*.so
 example/*.bin
 */example/*.bin
+*/*.so
+*/src/*.o
+libuconf/src/lexer_ascii.c
+libuconf/src/lexer_ascii.h
+libuconf/src/parser_ascii.c
+libuconf/src/parser_ascii.h
