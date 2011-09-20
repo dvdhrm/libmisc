@@ -1,0 +1,31 @@
+= Sysfs Helper Library =
+
+This library helps working with sysfs and related linux devices.
+See the manpage sfs(3) for an overview.
+
+= Requirements =
+
+This library is linux specific. There is no sysfs on other systems. It should
+run on any linux-2.6 kernel with sysfs enabled.
+
+= Install =
+
+Run
+	make build
+to build shared objects.
+Run
+	make example
+to build all examples in ./example/
+
+It is recommended to link this library statically into your applications if you
+want to use it. See ./Makefile for compiler flags.
+
+= License =
+
+This library is written by David Herrmann <dh.herrmann@googlemail.com> 2011 and
+the whole distribution is dedicated to the Public Domain.
+
+= Todo =
+
+- write man3/sfs(3)
+- write man3/*(3)

@@ -1,33 +1,17 @@
 = Miscellaneous Helper Libraries =
 
 This is a collection of miscellaneous helper libraries. Most of them are
-preferable used statically linked to your application. Simply copy the header
+preferably statically linked to your application. Simply copy the header
 and source file into your source tree and use it in your application.
 
-See the manpage misc(3) for an overview of all libraries.
+See the manpage misc(3) for an overview of all libraries. See each README file
+in the subdirectories for more information on each library.
 
 = Requirements =
 
 See each manpage for special requirements.
 
-= Install =
-
-Run
-	make build
-to build shared objects of all libraries (to test compilation).
-Run
-	make example
-to build all examples in ./example/
-
-Bigger libraries are placed in their own directory. For instance, see 
-./libcstr/README for build instructions for libcstr.
-
 = License =
 
 This library is written by David Herrmann <dh.herrmann@googlemail.com> 2011 and
 the whole distribution is dedicated to the Public Domain.
-
-= Todo =
-
-- write manpages
-- write man3/sfs(3)
