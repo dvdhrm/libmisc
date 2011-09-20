@@ -1,0 +1,45 @@
+.\"
+.\" Written 2011 by David Herrmann
+.\" Dedicated to the Public Domain
+.\"
+.TH "cstr_dup, cstr_cdup, cstr_strdup, cstr_strcdup" 3 "August 2011" "David Herrmann" "CSTR Library"
+.SH NAME
+cstr_dup, cstr_cdup, cstr_strdup, cstr_strcdup \- Duplicate string into cstr
+object
+
+.SH SYNOPSIS
+.B #include <libcstr.h>
+
+.BI "cstr *cstr_dup(const cstr *" str ");"
+.br
+.BI "cstr *cstr_cdup(const cstr *" str ");"
+.br
+.BI "cstr *cstr_strdup(size_t " len ", const void *" str ");"
+.br
+.BI "cstr *cstr_strcdup(size_t " len ", const void *" str ");"
+
+.SH DESCRIPTION
+.B cstr_dup
+duplicates
+.I str
+and returns the new cstr object.
+.B cstr_strdup
+does the same but takes a regular C-string as input. NULL is returned on memory
+allocation failure.
+
+.B cstr_cdup
+and
+.B cstr_strcdup
+do the same but create constant strings.
+
+.SH AUTHOR
+David Herrmann <dh.herrmann@googlemail.com>
+.SH "SEE ALSO"
+.BR cstr (3),
+.BR cstr_alloc (3),
+.BR cstr_free (3),
+.BR cstr_fit (3),
+.BR cstr_new (3),
+.BR cstr_cat (3),
+.BR CSTR_LEN (3),
+.BR CSTR_VOID (3)

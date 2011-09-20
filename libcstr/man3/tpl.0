@@ -1,0 +1,27 @@
+.\"
+.\" Written 2011 by David Herrmann
+.\" Dedicated to the Public Domain
+.\"
+.TH "cstr_" 3 "August 2011" "David Herrmann" "CSTR Library"
+.SH NAME
+cstr_, cstr_ \- Descr
+
+.SH SYNOPSIS
+.B #include <libcstr.h>
+
+.SH DESCRIPTION
+
+.SH AUTHOR
+David Herrmann <dh.herrmann@googlemail.com>
+.SH "SEE ALSO"
+.BR cstr (3),
+.BR cstr_alloc (3),
+.BR cstr_free (3),
+.BR cstr_fit (3),
+.BR cstr_new (3),
+.BR cstr_dup (3),
+.BR cstr_cat (3),
+.BR cstr_dir (3),
+.BR CSTR_LVALUE (3),
+.BR CSTR_LEN (3),
+.BR CSTR_VOID (3)

@@ -1,0 +1,50 @@
+.\"
+.\" Written 2011 by David Herrmann
+.\" Dedicated to the Public Domain
+.\"
+.TH "cstr_fit, cstr_cfit" 3 "August 2011" "David Herrmann" "CSTR Library"
+.SH NAME
+cstr_fit, cstr_cfit \- Adjust string length of cstr object
+
+.SH SYNOPSIS
+.B #include <libcstr.h>
+
+.BI "bool cstr_fit(cstr *" str ", size_t " len ");"
+.br
+.BI "bool cstr_cfit(cstr *" str ", size_t " len ");"
+
+.SH DESCRIPTION
+.B cstr_fit
+adjusts
+.I str
+to fit at least
+.I len
+characters. If the cstr object is bigger than requested, then the length is
+simply reset. Otherwise the object is reallocated. false is returned on memory
+reallocation failure, true on success.
+
+This can be seen as equivalent to
+.BR realloc (3)
+and has similar bahviour. The first
+.I len
+characters of the string are preserved. If
+.I len
+is greater than before, the new buffer is initialized with random values. This
+function must not be called with
+.I str
+= NULL.
+
+.B cstr_cfit
+has the same behaviour but works on constant cstr objects.
+
+.SH AUTHOR
+David Herrmann <dh.herrmann@googlemail.com>
+.SH "SEE ALSO"
+.BR cstr (3),
+.BR cstr_alloc (3),
+.BR cstr_free (3),
+.BR cstr_new (3),
+.BR cstr_dup (3),
+.BR cstr_cat (3),
+.BR CSTR_LEN (3),
+.BR CSTR_VOID (3)

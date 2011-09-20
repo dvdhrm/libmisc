@@ -1,0 +1,57 @@
+.\"
+.\" Written 2011 by David Herrmann
+.\" Dedicated to the Public Domain
+.\"
+.TH "cstr_alloc, cstr_free" 3 "August 2011" "David Herrmann" "CSTR Library"
+.SH NAME
+cstr_alloc, cstr_free \- Allocate and free cstr object
+
+.SH SYNOPSIS
+.B #include <libcstr.h>
+
+.BI "cstr *cstr_alloc(size_t " len ", ssize_t " size ", void *" buf ");"
+.br
+.BI "void cstr_free(cstr *" str ");"
+
+.SH DESCRIPTION
+.B cstr_alloc
+allocates a new cstr object with string-length
+.I len
+and string-size
+.I size.
+See
+.BR cstr (3)
+for information on string-length and string-size. The
+.BR cstr_new (3)
+family of functions is more convenient and should be used. The function returns
+NULL on memory allocation failure. It uses
+.BR malloc (3)
+for memory allocation.
+If
+.I size
+is negative, then
+.I buf
+must point to a static buffer that is used instead of allocating a dynamic
+buffer. Otherwise
+.I buf
+is ignored. See
+.BR cstr (3)
+for information on static buffers. Also see
+.BR CSTR_LVALUE (3)
+for cstr objects on the stack or with static buffers.
+
+.B cstr_free
+deallocates a cstr object. It is equivalent to calling
+.BR free (3)
+on the cstr object. If called with NULL as argument, nothing is done.
+
+.SH AUTHOR
+David Herrmann <dh.herrmann@googlemail.com>
+.SH "SEE ALSO"
+.BR cstr (3),
+.BR cstr_fit (3),
+.BR cstr_new (3),
+.BR cstr_dup (3),
+.BR cstr_cat (3),
+.BR CSTR_LEN (3),
+.BR CSTR_VOID (3)
