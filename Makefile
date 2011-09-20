@@ -3,13 +3,23 @@
 # Dedicated to the Public Domain
 #
 
-PREFIX=/usr
+CFLAGS=-Wall -O0 -g -Isrc
 
 all: build
-	@echo "Available targets: build clean"
+	@echo "Available targets: build clean example"
 
-build:
+build: src/libsfs.so
 
 clean:
+	@rm -rfv src/*.so example/*.bin
 
-.PHONY: all build clean
+example: example/sfs_example.bin
+
+src/libsfs.so: src/sfs.c
+	gcc -o src/libsfs.so -shared -fPIC $(CFLAGS) src/sfs.c
+
+example/sfs_example.bin: example/sfs_example.c src/libsfs.so
+	gcc -o example/sfs_example.bin example/sfs_example.c $(CFLAGS) \
+ src/libsfs.so
+
+.PHONY: all build clean example

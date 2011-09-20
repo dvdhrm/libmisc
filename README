@@ -15,6 +15,9 @@ See each manpage for special requirements.
 Run
 	make build
 to build shared objects of all libraries (to test compilation).
+Run
+	make example
+to build all examples in ./example/
 
 = License =
 
@@ -24,3 +27,4 @@ the whole distribution is dedicated to the Public Domain.
 = Todo =
 
 - write manpages
+- write man3/sfs(3)
