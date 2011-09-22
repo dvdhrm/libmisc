@@ -356,8 +356,13 @@ named_list:
 	;
 
 anon_list:
+	anon_list_valid
+	| anon_list_valid ','
+	;
+
+anon_list_valid:
 	anon_entry
-	| anon_list ',' anon_entry
+	| anon_list_valid ',' anon_entry
 	;
 
 anon_entry:
