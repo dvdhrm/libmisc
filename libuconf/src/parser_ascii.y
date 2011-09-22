@@ -370,4 +370,8 @@ anon_entry:
 	{
 		uconf_entry_link_last(arg->curr, $1);
 	}
+	| assignment
+	{
+		uconf_entry_link_last(arg->curr, $1);
+	}
 	;
