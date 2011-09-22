@@ -50,6 +50,7 @@ extern int uconf_file_get_fd(struct uconf_file*);
  */
 
 struct uconf_entry_list {
+	size_t num;
 	struct uconf_entry *first;
 	struct uconf_entry *last;
 };

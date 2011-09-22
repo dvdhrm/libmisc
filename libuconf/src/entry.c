@@ -36,6 +36,7 @@
 
 static int t_list_init(struct uconf_entry *entry)
 {
+	entry->v.list.num = 0;
 	entry->v.list.first = NULL;
 	entry->v.list.last = NULL;
 	return 0;
@@ -44,6 +45,7 @@ static int t_list_init(struct uconf_entry *entry)
 static void t_list_destroy(struct uconf_entry *entry)
 {
 	uconf_entry_unlink_all(entry, NULL);
+	entry->v.list.num = 0;
 	entry->v.list.first = NULL;
 	entry->v.list.last = NULL;
 }
@@ -262,6 +264,8 @@ void uconf_entry_link(struct uconf_entry *parent, struct uconf_entry *rel,
 		parent->v.list.last = entry;
 	if (!entry->prev)
 		parent->v.list.first = entry;
+
+	parent->v.list.num++;
 }
 
 /*
@@ -286,6 +290,7 @@ void uconf_entry_unlink(struct uconf_entry *entry)
 		entry->prev = NULL;
 		entry->parent = NULL;
 		uconf_entry_unref(entry);
+		parent->v.list.num--;
 	} else {
 		assert(!entry->next);
 		assert(!entry->prev);
