@@ -58,7 +58,7 @@ static void print_rec(struct uconf_entry *entry, const cstr *p)
 							entry->v.sref->buf);
 			break;
 		case UCONF_ENTRY_LIST:
-			printf("(list)\n");
+			printf("(list: %lu)\n", entry->v.list.num);
 			n = cstr_dup(p);
 			if (!n || !cstr_strccat(n, -1, "  ")) {
 				printf("Error: Memory allocation failed\n");
