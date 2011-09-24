@@ -23,7 +23,7 @@ libcstr.h: ../include/libcstr.h
 	@cp -v ../include/libcstr.h .
 
 %.bin: %.c libcstr.so libcstr.h Makefile
-	gcc -o $@ $< -Wall -g -O0 -lcstr
+	gcc -o $@ $< -Wall -g -O0 libcstr.so
 
 clean:
 	@rm -vf *.bin libcstr.h libcstr.so

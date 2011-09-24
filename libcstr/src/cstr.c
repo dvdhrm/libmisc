@@ -5,23 +5,26 @@
  */
 
 /*
- * C-string helper functions. Each string consists of a char-array and a size_t
- * integer which contains the string length. This allows the string to contain
- * \0 characters anywhere in the buffer. For faster string modifications, there
- * is also a size member which contains the currently allocated string size.
- * This is always twice as much as the string size on allocation. For constant
- * strings, this is always the same as the string size to reduce memory
- * consumption.
- * For compatibility reasons, every string still contains a terminating 0
- * character, which, however, is not considered part of the string and hence not
- * included in the string length.
+ * CSTR Objects
+ * A cstr object consists of a buffer, the size of the buffer and the length of
+ * the string. The length is always smaller or equal to the absolute size of the
+ * buffer. The length may be 0.
+ * The buffer pointer is always non-NULL and points to a valid buffer. The
+ * buffer size is either the absolute size of the buffer minus 1 or its
+ * negative. If the size is negative, this means that the buffer is not owned by
+ * us and that we should not call free() on it. We simply drop it and allocate a
+ * new buffer if we need to resize our buffer.
+ * If the size is zero or bigger, it means that our buffer is allocated by us
+ * and that we need to free it with free() when no longer used.
+ * The actual size of the buffer is abs(obj->size) + 1. We keep a +1 for the
+ * terminating zero for backwards compatibility.
  *
- * Compatibility functions for classic C-strings are prefixed with "str". They
- * accept a "len" parameter for the passed c-string which can be <0, so strlen()
- * is used to determine the size. For constant strings, the function is prefixed
- * with "c". Constant strings do not allocate additional buffer size for faster
- * string modifications, however, they allow the same modifications as normal
- * cstrs, but it may be way slower.
+ * To speed up string manipulations, the buffer is often twice the size as
+ * required. However, many strings do not need to be manipulated and hence do
+ * not need a big buffer. Therefore, many functions take as last argument a
+ * \constant boolean which should be true if no additional buffer space should
+ * be allocated. If it is false, the buffer size is always twice as big as
+ * requested. The default value is false.
  */
 
 #include <assert.h>
@@ -31,24 +34,40 @@
 #include <string.h>
 #include "libcstr.h"
 
+/*
+ * Allocates a new cstr object on the heap.
+ * The cstr object will have length \len. If \size is greater than or equal to
+ * zero and \buf is NULL, then a new buffer is allocated. If \buf is non-NULL,
+ * the buffer is set to \buf and we own it now (that is, we free it if we no
+ * longer need it).
+ * If \size is smaller than 0, then \buf is taken as constant buffer which we do
+ * not own.
+ * In all cases, abs(\size) must be greater than or equal to \len.
+ * If \buf is non-NULL, then buffer pointed to by \buf must be at least of size
+ * abs(\size) + 1. The +1 is important!
+ *
+ * This returns NULL on memory allocation errors, otherwise it returns the new
+ * cstr object.
+ */
 cstr *cstr_alloc(size_t len, ssize_t size, void *buf)
 {
 	cstr *str;
 
-	assert(len <= size || len <= -size);
+	assert(len <= abs(size));
 
 	str = malloc(sizeof(*str));
 	if (!str)
 		return NULL;
 
-	if (size < 0)
-		str->buf = buf;
-	else
+	if (size >= 0 && !buf) {
 		str->buf = malloc(size + 1);
-
-	if (!str->buf) {
-		free(str);
-		return NULL;
+		if (!str->buf) {
+			free(str);
+			return NULL;
+		}
+	} else {
+		assert(buf);
+		str->buf = buf;
 	}
 
 	str->len = len;
@@ -58,29 +77,60 @@ cstr *cstr_alloc(size_t len, ssize_t size, void *buf)
 	return str;
 }
 
-void cstr_dealloc(cstr *str)
+/*
+ * This frees the allocated buffer of \str. It does not free the cstr object.
+ * However, the cstr object is invalid after this call and must not be used,
+ * anymore. The only valid function that may be called on the cstr object after
+ * this is cstr_free().
+ * You do not need to call this on dynamically allocated cstr objects as
+ * cstr_free() also frees the buffers. However, statically allocated cstr
+ * objects which are not constant must be freed with this function.
+ */
+void cstr_clear(cstr *str)
 {
-	if (str) {
-		if (str->size >= 0)
-			free(str->buf);
-		str->buf = NULL;
-	}
+	if (str->size >= 0)
+		free(str->buf);
+	str->len = 0;
+	str->size = 0;
+	str->buf = NULL;
 }
 
+/*
+ * Frees all allocated buffers of \str and the object itself.
+ * After this call \str should not be used anymore.
+ */
 void cstr_free(cstr *str)
 {
 	if (str) {
-		cstr_dealloc(str);
+		cstr_clear(str);
 		free(str);
 	}
 }
 
-static bool fit(cstr *str, size_t len, bool constant)
+/*
+ * Resize cstr buffer
+ * This resizes the buffer of \str to make room for at least \len bytes. The
+ * string length is also reset to \len and the zero terminating character is set
+ * to the end of the new buffer.
+ * If the current buffer is big enough, no new buffer is allocated. Only if we
+ * need more space, the current buffer is freed or dropped and a new buffer is
+ * allocated.
+ * This returns false if the new buffer cannot be allocated. Otherwise it
+ * returns true.
+ * If a new buffer is allocated and \constant is true, the new buffer will have
+ * the exact same size as required. If \constant is false, the buffer will be
+ * twice as big as required.
+ * \str is not touched at all if the memory allocation fails and false is
+ * returned. So on failure the old state is preserved.
+ */
+bool cstr__fit(cstr *str, size_t len, bool constant)
 {
 	void *snew;
 	size_t size;
 
-	if (str->size < (ssize_t)len && (-str->size) < (ssize_t)len) {
+	assert(str);
+
+	if (abs(str->size) < (ssize_t)len) {
 		if (constant)
 			size = len;
 		else
@@ -102,163 +152,87 @@ static bool fit(cstr *str, size_t len, bool constant)
 	return true;
 }
 
-bool cstr_fit(cstr *str, size_t len)
+/*
+ * Duplicate string
+ * This creates a duplicate of \old and returns it. The new object is in no way
+ * dependent of \old and can be used as usual.
+ * Returns NULL on memory allocation errors.
+ * The buffer of the new object may be of different size as \old. \constant
+ * specifies how the new buffer is allocated.
+ */
+cstr *cstr__dup(const cstr *old, bool constant)
 {
-	return fit(str, len, false);
-}
+	cstr *dest;
 
-bool cstr_cfit(cstr *str, size_t len)
-{
-	return fit(str, len, true);
-}
-
-cstr *cstr_new0(size_t len)
-{
-	cstr *str;
-
-	str = cstr_new(len);
-	if (!str)
-		return NULL;
-
-	memset(CSTR_VOID(str), 0, len);
-	return str;
-}
-
-cstr *cstr_cnew0(size_t len)
-{
-	cstr *str;
-
-	str = cstr_cnew(len);
-	if (!str)
-		return NULL;
-
-	memset(CSTR_VOID(str), 0, len);
-	return str;
-}
-
-cstr *cstr_strdup(ssize_t len, const void *init)
-{
-	cstr *str;
-
-	if (len < 0)
-		len = strlen(init);
-
-	str = cstr_new(len);
-	if (!str)
-		return NULL;
-
-	memcpy(CSTR_VOID(str), init, len);
-	return str;
-}
-
-cstr *cstr_strcdup(ssize_t len, const void *init)
-{
-	cstr *str;
-
-	if (len < 0)
-		len = strlen(init);
-
-	str = cstr_cnew(len);
-	if (!str)
-		return NULL;
-
-	memcpy(CSTR_VOID(str), init, len);
-	return str;
-}
-
-bool cstr_strcat(cstr *str, ssize_t len, const void *cat)
-{
-	size_t slen = CSTR_LEN(str);
-
-	if (len < 0)
-		len = strlen(cat);
-
-	if (!cstr_fit(str, slen + len))
-		return false;
-
-	memcpy(&str->buf[slen], cat, len);
-	return true;
-}
-
-bool cstr_strccat(cstr *str, ssize_t len, const void *cat)
-{
-	size_t slen = CSTR_LEN(str);
-
-	if (len < 0)
-		len = strlen(cat);
-
-	if (!cstr_cfit(str, slen + len))
-		return false;
-
-	memcpy(&str->buf[slen], cat, len);
-	return true;
-}
-
-static inline cstr *dir(const cstr *str, bool constant)
-{
-	cstr *dir;
-	size_t len, last = 0;
-
-	for (len = 0; len < CSTR_LEN(str); ++len) {
-		if (str->buf[len] == '/')
-			last = len;
-	}
-
-	/* if result is root directory, we need to copy the trailing '/' */
-	if (!last && str->buf[0] == '/') {
-		if (constant)
-			return cstr_strcdup(-1, "/");
-		else
-			return cstr_strdup(-1, "/");
-	}
+	assert(old);
 
 	if (constant)
-		dir = cstr_strcdup(last, CSTR_VOID(str));
+		dest = cstr_cnew(CSTR_LEN(old));
 	else
-		dir = cstr_strdup(last, CSTR_VOID(str));
+		dest = cstr_new(CSTR_LEN(old));
+	if (!dest)
+		return NULL;
 
-	return dir;
+	memcpy(CSTR_VOID(dest), CSTR_VOID(old), CSTR_LEN(old));
+	return dest;
 }
 
-cstr *cstr_dir(const cstr *str)
+/*
+ * Concatenate strings
+ * This puts \src at the end of \dest. \constant controls how the buffer of
+ * \dest is reallocated if required.
+ */
+bool cstr__cat(cstr *dest, const cstr *src, bool constant)
 {
-	return dir(str, false);
-}
+	size_t dlen = CSTR_LEN(dest);
 
-cstr *cstr_cdir(const cstr *str)
-{
-	return dir(str, true);
-}
-
-bool cstr_strcmp(const cstr *str1, ssize_t len, const void *str2)
-{
-	if (len < 0)
-		len = strlen(str2);
-
-	if (CSTR_LEN(str1) != len)
+	if (!cstr__fit(dest, dlen + CSTR_LEN(src), constant))
 		return false;
 
-	return !memcmp(CSTR_VOID(str1), str2, len);
-}
-
-static bool copy(cstr *dest, ssize_t len, const void *src, bool constant)
-{
-	if (len < 0)
-		len = strlen(src);
-
-	if (!fit(dest, len, constant))
-		return false;
-
-	memcpy(CSTR_VOID(dest), src, len);
+	memcpy(CSTR_UINT8(dest) + dlen, CSTR_VOID(src), CSTR_LEN(src));
 	return true;
 }
 
-bool cstr_strcpy(cstr *dest, ssize_t len, const void *src)
+/*
+ * Compare strings
+ * Returns true if \str1 and \str2 are equal.
+ */
+bool cstr_cmp(const cstr *str1, const cstr *str2)
 {
-	return copy(dest, len, src, false);
+	if (CSTR_LEN(str1) != CSTR_LEN(str2))
+		return false;
+
+	return !memcmp(CSTR_VOID(str1), CSTR_VOID(str2), CSTR_LEN(str1));
 }
 
-bool cstr_strccpy(cstr *dest, ssize_t len, const void *src)
+/*
+ * Compare substrings
+ * Compares the first \n characters of both strings for equality.
+ * Returns true if they are equal.
+ * If \n is bigger than the length of any of both strings, then this is
+ * identical to cstr_cmp().
+ */
+bool cstr_ncmp(const cstr *str1, const cstr *str2, size_t n)
 {
-	return copy(dest, len, src, true);
+	if (CSTR_LEN(str1) < n || CSTR_LEN(str2) < n)
+		return cstr_cmp(str1, str2);
+
+	return !memcmp(CSTR_VOID(str1), CSTR_VOID(str2), n);
+}
+
+/*
+ * Copy string
+ * This copies \src into \dest. \constant controls how the new buffer is
+ * allocated.
+ * This function is similar to cstr_dup() but takes an existing object instead
+ * of creating a new object.
+ * Returns true on success and false on memory allocation failure.
+ */
+bool cstr__cpy(cstr *dest, const cstr *src, bool constant)
+{
+	if (!cstr__fit(dest, CSTR_LEN(src), constant))
+		return false;
+
+	memcpy(CSTR_VOID(dest), CSTR_VOID(src), CSTR_LEN(src));
+	return true;
 }

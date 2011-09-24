@@ -11,9 +11,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <libcstr.h>
+#include "libcstr.h"
 
-#define MEMFAIL2 fail(&CSTR_CS("memfail"))
+#define MEMFAIL2 fail(CSTR_CS("memfail"))
 #define MEMFAIL(str) ((str) ? 0 : MEMFAIL2)
 
 /* print \err and abort application */
@@ -45,10 +45,7 @@ static void stress(cstr *str)
 	buf = cstr_dup(str);
 	MEMFAIL(str);
 
-	if (str->size < 0)
-		size = -str->size;
-	else
-		size = str->size;
+	size = CSTR_SIZE(str);
 
 	for (i = 0; i < size; ++i)
 		str->buf[i] = -1;
@@ -64,7 +61,7 @@ static void stress(cstr *str)
 
 /*
  * Examples for CSTR_STATIC, CSTR_DYNAMIC and CSTR_CONST_*
- * Calling cstr_dealloc() on the cstr objects is not required in this example as
+ * Calling cstr_clear() on the cstr objects is not required in this example as
  * the strings are not modified. However, if stress() (which is called on all
  * strings in this example) would reallocate the object to get a bigger buffer,
  * then we need to free that buffer again.
@@ -89,18 +86,20 @@ static void example_stack()
 	 * beforehand is safe, though.
 	 */
 	printf("static 1\n");
-	cstr a = CSTR_STATIC(buf);
-	cstr b = CSTR_DYNAMIC(buf);
+	cstr a = *CSTR_STATIC(buf);
+	cstr b = *CSTR_DYNAMIC(buf);
 
 	stress(&a);
 	stress(&b);
-	stress(&CSTR_S(buf));			/* unsafe */
-	echo((const cstr*)&CSTR_S(buf));	/* safe */
-	stress(&CSTR_D(buf));			/* unsafe */
-	echo((const cstr*)&CSTR_D(buf));	/* safe */
 
-	cstr_dealloc(&b);
-	cstr_dealloc(&a);
+	stress(CSTR_S(buf));			/* unsafe */
+	echo((const cstr*)CSTR_S(buf));		/* safe */
+
+	stress(CSTR_D(buf));			/* unsafe */
+	echo((const cstr*)CSTR_D(buf));		/* safe */
+
+	cstr_clear(&b);
+	cstr_clear(&a);
 
 	/*
 	 * Creating static cstr objects with static string pointer. We cannot
@@ -112,13 +111,13 @@ static void example_stack()
 	 * beforehand is safe, though.
 	 */
 	printf("static 2\n");
-	cstr c = CSTR_DYNAMIC(str);
+	cstr c = *CSTR_DYNAMIC(str);
 
 	stress(&c);
-	stress(&CSTR_D(str));			/* unsafe */
-	echo((const cstr*)&CSTR_D(str));	/* safe */
+	stress(CSTR_D(str));			/* unsafe */
+	echo((const cstr*)CSTR_D(str));		/* safe */
 
-	cstr_dealloc(&c);
+	cstr_clear(&c);
 
 	/*
 	 * \constant is initialized with a static string which is not placed on
@@ -129,12 +128,12 @@ static void example_stack()
 	 * directly to other functions. No special cast is needed.
 	 */
 	printf("static 3\n");
-	const cstr d = CSTR_CONST_DYNAMIC(constant);
+	const cstr d = *CSTR_CONST_DYNAMIC(constant);
 
 	echo(&d);
-	echo(&CSTR_CD(constant)); /* safe */
-	echo(&CSTR_CS("const")); /* safe */
-	/* no cstr_dealloc needed as the objects are constant */
+	echo(CSTR_CD(constant)); /* safe */
+	echo(CSTR_CS("const")); /* safe */
+	/* no cstr_clear needed as the objects are constant */
 }
 
 /*
@@ -145,7 +144,7 @@ static void example_heap()
 {
 	/* new strings from scratch */
 	printf("dynamic 1\n");
-	cstr *a = cstr_new0(10);
+	cstr *a = cstr_new(10);
 	MEMFAIL(a);
 
 	/*
@@ -153,7 +152,7 @@ static void example_heap()
 	 * the new string and reallocation fails. Our buffer is big enough so we
 	 * do not need this check. We do it anyway.
 	 */
-	if (!cstr_strcpy(a, -1, "hello!"))
+	if (!cstr_cpy(a, CSTR("hello!")))
 		MEMFAIL2;
 
 	cstr *b = cstr_dup(a);
@@ -167,10 +166,10 @@ static void example_heap()
 
 	/* same with constant strings (notice the size difference) */
 	printf("dynamic 2\n");
-	a = cstr_cnew0(10);
+	a = cstr_cnew(10);
 	MEMFAIL(a);
 
-	if (!cstr_strccpy(a, -1, "hello!"))
+	if (!cstr_ccpy(a, CSTR("hello!")))
 		MEMFAIL2;
 
 	b = cstr_cdup(a);
@@ -184,12 +183,12 @@ static void example_heap()
 
 	/* miscellaneous functions */
 	printf("dynamic 3\n");
-	a = cstr_strdup(-1, "Hello World!");
+	a = cstr_dup(CSTR("Hello World!"));
 	MEMFAIL(a);
 
 	stress(a);
 
-	if (!cstr_strcat(a, -1, " This is the future and more..."))
+	if (!cstr_ccat(a, CSTR(" This is the future and more...")))
 		MEMFAIL2;
 
 	stress(a);
