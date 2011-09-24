@@ -60,7 +60,7 @@ static void print_rec(struct uconf_entry *entry, const cstr *p)
 		case UCONF_ENTRY_LIST:
 			printf("(list: %lu)\n", entry->v.list.num);
 			n = cstr_dup(p);
-			if (!n || !cstr_strccat(n, -1, "  ")) {
+			if (!n || !cstr_ccat(n, CSTR("  "))) {
 				printf("Error: Memory allocation failed\n");
 				return;
 			}
@@ -79,7 +79,7 @@ static void print_root(struct uconf_entry *entry)
 {
 	cstr *p;
 
-	p = cstr_strcdup(-1, "  ");
+	p = cstr_dup(CSTR("  "));
 	if (!p) {
 		printf("Error: Memory allocation failed\n");
 		return;
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	path = cstr_strcdup(-1, argv[1]);
+	path = cstr_cdup(CSTR(argv[1]));
 	if (!path) {
 		uconf_file_free(file);
 		printf("Error: Memory allocation failed\n");

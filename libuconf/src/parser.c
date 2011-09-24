@@ -27,6 +27,26 @@
 
 extern int yyparse(void*);
 
+static cstr *get_dir(const cstr *str)
+{
+	size_t len, last = 0;
+
+	if (!CSTR_LEN(str))
+		return cstr_dup(str);
+
+	for (len = 0; len < CSTR_LEN(str); ++len) {
+		if (str->buf[len] == '/')
+			last = len;
+	}
+
+	/* if result is root directory, we need to copy the trailing '/' */
+	if (!last && str->buf[0] == '/') {
+		return cstr_dup(CSTR("/"));
+	}
+
+	return cstr_dup(CSTR_B(last, CSTR_VOID(str)));
+}
+
 int parse_file(struct uconf_file *file, struct yyarg *arg)
 {
 	int ret = 0;
@@ -50,7 +70,7 @@ int parse_file(struct uconf_file *file, struct yyarg *arg)
 	}
 
 	if (!arg->path) {
-		path = cstr_dir(uconf_file_get_name(file));
+		path = get_dir(uconf_file_get_name(file));
 		if (!path) {
 			ret = -ENOMEM;
 			goto err;

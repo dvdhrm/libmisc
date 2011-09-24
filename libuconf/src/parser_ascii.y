@@ -84,7 +84,7 @@ static bool builtin_include(struct yyarg *arg, const cstr *path)
 
 	if (path->buf[0] != '/') {
 		npath = cstr_dup(arg->path);
-		if (!npath || !cstr_strcat(npath, -1, "/") ||
+		if (!npath || !cstr_cat(npath, CSTR("/")) ||
 						!cstr_ccat(npath, path)) {
 			parser_error(arg, -ENOMEM);
 			return NULL;

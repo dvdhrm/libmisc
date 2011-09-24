@@ -29,9 +29,9 @@
 %%
 
 %{
-	void str_append(yyscan_t scanner, size_t len, const void *str)
+	void str_append(yyscan_t scanner, const cstr *str)
 	{
-		if (!cstr_strcat(yylval->str, len, str)) {
+		if (!cstr_cat(yylval->str, str)) {
 			cstr_free(yylval->str);
 			YY_FATAL_ERROR("out of memory");
 		}
@@ -64,13 +64,13 @@
 	yy_pop_state(yyscanner);
 	return QSTRING;
 }
-<STRING>"\\\""			str_append(yyscanner, 1, "\"");
-<STRING>"\\n"			str_append(yyscanner, 1, "\n");
-<STRING>"\\t"			str_append(yyscanner, 1, "\t");
-<STRING>"\\r"			str_append(yyscanner, 1, "\r");
+<STRING>"\\\""			str_append(yyscanner, CSTR("\""));
+<STRING>"\\n"			str_append(yyscanner, CSTR("\n"));
+<STRING>"\\t"			str_append(yyscanner, CSTR("\t"));
+<STRING>"\\r"			str_append(yyscanner, CSTR("\r"));
 <STRING>"\\\\"			|
-<STRING>"\\"			str_append(yyscanner, 1, "\\");
-<STRING>[^"\\]+			str_append(yyscanner, yyleng, yytext);
+<STRING>"\\"			str_append(yyscanner, CSTR("\\"));
+<STRING>[^"\\]+			str_append(yyscanner, CSTR_B(yyleng, yytext));
 
 	/*
 	 * Comments
@@ -99,7 +99,7 @@ NULL				return QNULL;
 	 * "NULL".
 	 */
 [a-zA-Z_][a-zA-Z0-9_-]*		{
-	yylval->str = cstr_strdup(yyleng, yytext);
+	yylval->str = cstr_dup(CSTR_B(yyleng, yytext));
 	if (!yylval->str)
 		YY_FATAL_ERROR("out of memory");
 	return QSTRING;
