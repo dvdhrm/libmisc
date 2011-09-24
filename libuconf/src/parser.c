@@ -62,10 +62,11 @@ int parse_file(struct uconf_file *file, struct yyarg *arg)
 		return -errno;
 
 	if (!arg->scanner) {
-		if (yylex_init_extra(f, &scanner)) {
+		if (yylex_init(&scanner)) {
 			ret = -EFAULT;
 			goto err;
 		}
+		yyset_in(f, scanner);
 		arg->scanner = scanner;
 	}
 

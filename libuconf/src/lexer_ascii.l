@@ -38,10 +38,6 @@
 	}
 %}
 
-%{
-	yyin = yyextra;
-%}
-
 	/*
 	 * Strings
 	 * Strings start with " and end with " like in C. Backslashes are used
