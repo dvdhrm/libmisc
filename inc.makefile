@@ -67,7 +67,7 @@ ifeq ($(SYSTEM),linux)
 else ifeq ($(SYSTEM),macosx)
   TARGET=$(LIBNAME).dylib
   CC=gcc -o
-  FLAGS_C=-c -Wall -fPIC -Iinclude
+  FLAGS_C=-c -Wall -fPIC -Iinclude -fnested-functions
   LD=gcc -o
   FLAGS_L=-dynamiclib -Wall $(addprefix -l, $(LIBS))
 else
