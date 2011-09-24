@@ -22,22 +22,25 @@ typedef struct cstr {
 			{ .len = arg_l, .size = arg_s, .buf = (void*)arg_b }
 
 #define CSTR__B(len, size, buf) CSTR__BUFFER(len, size, buf)
-#define CSTR__BUFFER(len, size, buf) \
-					(&(cstr)CSTR__LVALUE(len, size, buf))
+#define CSTR__BUFFER(len, size, buf) (&(cstr)CSTR__LVALUE(len, size, buf))
 #define CSTR__CB(len, size, buf) CSTR__CONST_BUFFER(len, size, buf)
 #define CSTR__CONST_BUFFER(len, size, buf) \
 				(&(const cstr)CSTR__LVALUE(len, size, buf))
 
+#define CSTR_B(len, buf) CSTR_BUFFER(len, buf)
+#define CSTR_BUFFER(len, buf) CSTR__B((len), -(len), buf)
+#define CSTR_CB(len, buf) CSTR_CONST_BUFFER(len, buf)
+#define CSTR_CONST_BUFFER(len, buf) CSTR__CB((len), -(len), buf)
+
 #define CSTR_S(str) CSTR_STATIC(str)
-#define CSTR_STATIC(str) CSTR__B((sizeof(str) - 1), -(sizeof(str) - 1), (str))
+#define CSTR_STATIC(str) CSTR_B(sizeof(str) - 1, (str))
 #define CSTR_CS(str) CSTR_CONST_STATIC(str)
-#define CSTR_CONST_STATIC(str) \
-			CSTR__CB((sizeof(str) - 1), -(sizeof(str) - 1), (str))
+#define CSTR_CONST_STATIC(str) CSTR_CB(sizeof(str) - 1, (str))
 
 #define CSTR_D(str) CSTR_DYNAMIC(str)
-#define CSTR_DYNAMIC(str) CSTR__B(strlen(str), -strlen(str), (str))
+#define CSTR_DYNAMIC(str) CSTR_B(strlen(str), (str))
 #define CSTR_CD(str) CSTR_CONST_DYNAMIC(str)
-#define CSTR_CONST_DYNAMIC(str) CSTR__CB(strlen(str), -strlen(str), (str))
+#define CSTR_CONST_DYNAMIC(str) CSTR_CB(strlen(str), (str))
 
 #define CSTR_LEN(str) ((str)->len)
 #define CSTR_SIZE(str) (abs((str)->size))
