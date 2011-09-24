@@ -22,6 +22,11 @@
 #include "uconf.h"
 #include "libuconf.h"
 
+/* systems without "CLOEXEC" should just ignore it */
+#ifndef O_CLOEXEC
+	#define O_CLOEXEC 0
+#endif
+
 struct uconf_file {
 	signed int fd;
 	cstr *name;
