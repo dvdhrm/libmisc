@@ -3,25 +3,29 @@
 # Dedicated to the Public Domain
 #
 
+#
+# Build examples
+# This does currently work on linux only. Adjust this makefile if you need to
+# build the examples on other systems.
+#
+
 BINARIES=strings.bin
 
-all: build
-	@echo "Available targets: build install uninstall clean"
+build: prepare $(BINARIES)
 
-build: $(BINARIES)
-	@echo "Examples built"
+../libcstr.so:
+	@cd .. && make build
 
-%.bin: %.c ../src/libcstr.h Makefile
-	gcc -o $@ $< -Wall -g -O0 -lcstr -I../src
+libcstr.so: ../libcstr.so
+	@cp -v ../libcstr.so .
 
-install: build
-	@echo "Examples installed"
+libcstr.h: ../include/libcstr.h
+	@cp -v ../include/libcstr.h .
 
-uninstall:
-	@echo "Examples uninstalled"
+%.bin: %.c libcstr.so libcstr.h Makefile
+	gcc -o $@ $< -Wall -g -O0 -lcstr
 
 clean:
-	@rm -vf *.bin
-	@echo "Examples cleaned"
+	@rm -vf *.bin libcstr.h libcstr.so
 
-.PHONY: all build install uninstall clean
+.PHONY: build prepare clean
