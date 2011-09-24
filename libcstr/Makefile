@@ -159,9 +159,9 @@ install_pre:
 	@echo "Installing $(LIBNAME)"
 
 install_do:
-	@install -v -t $(PREFIX)/include $(addprefix include/, $(INC_I))
-	@install -v -t $(PREFIX)/lib $(TARGET)
-	@install -v -t $(PREFIX)/share/man/man3 $(addprefix man3/, $(MAN_I))
+	@install -v $(addprefix include/, $(INC_I)) $(PREFIX)/include
+	@install -v $(TARGET) $(PREFIX)/lib
+	@install -v $(addprefix man3/, $(MAN_I)) $(PREFIX)/share/man/man3
 
 uninstall: uninstall_pre uninstall_do
 	@echo "Uninstalling done"
