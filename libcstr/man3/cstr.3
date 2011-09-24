@@ -26,12 +26,12 @@ typedef
 .B cstr;
 
 #define
-.B CSTR(str)
-CSTR_CHAR(str)
-.br
-#define
 .B CSTR_LEN(str)
 ((str)->len)
+.br
+#define
+.B CSTR_SIZE(str)
+(abs((str)->size))
 .br
 #define
 .B CSTR_CHAR(str)
@@ -47,6 +47,8 @@ CSTR_CHAR(str)
 
 .RB "cstr *" "cstr_alloc" "(size_t len, ssize_t size, void *buf);"
 .br
+.RB "void " "cstr_clear" "(cstr *str);"
+.br
 .RB "void " "cstr_free" "(cstr *str);"
 .br
 .RB "bool " "cstr_fit" "(cstr *str, size_t len);"
@@ -57,29 +59,13 @@ bool cstr_cfit(cstr *str, size_t len);
 .br
 cstr *cstr_cnew(size_t len);
 .br
-cstr *cstr_new0(size_t len);
-.br
-cstr *cstr_cnew0(size_t len);
-.br
 .RB "cstr *" "cstr_dup" "(const cstr *str);"
 .br
 cstr *cstr_cdup(const cstr *str);
 .br
-cstr *cstr_strdup(size_t len, const void *init);
-.br
-cstr *cstr_strcdup(size_t len, const void *init);
-.br
 .RB "bool " "cstr_cat" "(cstr *str, const cstr *cat);"
 .br
 bool cstr_ccat(cstr *str, const cstr *cat);
-.br
-bool cstr_strcat(cstr *str, size_t len, const void *cat);
-.br
-bool cstr_strccat(cstr *str, size_t len, const void *cat);
-.br
-.RB "cstr *" "cstr_dir" "(const cstr *str);"
-.br
-cstr *cstr_cdir(const cstr *str);
 
 .SH DESCRIPTION
 The
@@ -105,7 +91,7 @@ allocated size of the array. It is always either greater than or equal to the
 array-length. If the buffer is static and not allocated by the library, then the
 array-size is negative and the buffer will not be freed by the library. Instead,
 on reallocation, the buffer is dropped and a new buffer is allocated.
-A static buffer cannot have size 0, though. This wouldn't make sense, anyway.
+Size 0 is always a static buffer with only a terminating zero character.
 Since many strings are modified during runtime, a cstr buffer, when allocated,
 has always twice the size as required. This allows to modify the string without
 the need of reallocating the buffer. However, often a string is constant and
@@ -146,24 +132,8 @@ is, your "size" argument is 1 smaller than the actual size. Otherwise, the
 library won't be able to write the 0 character.
 The 0 character is not added to the size argument, as it is just a
 backwards-compatibility helper. New applications should not rely on anything
-like it when handling cstr objects, except if they pass teh cstr object as
+like it when handling cstr objects, except if they pass the cstr object as
 classic C-String to other functions.
-
-Also many functions that take a string input also accept C-style strings. These
-functions are prefixed with
-.B str
-and accept a
-.B const void *str
-and
-.B ssize_t len
-argument instead of the cstr object. The
-.B len
-argument must be the length of the C-string
-.B str
-or <0 (eg., -1) which is equal to
-.B strlen(str)
-as argument. For example cstr_strdup() does the same as cstr_dup() but takes a
-classic C-string as input and produces a cstr object as output.
 
 New strings almost always should be allocated either with
 .B cstr_new()
@@ -187,8 +157,8 @@ values, too. However, the cstr functions are optimized for most string
 modifications so it's better to use them.
 
 It is also possible to allocate cstr objects on the stack or as lvalue. See
-CSTR_LVALUE for the documentation. However, this allows to call functions, that
-accept cstr-objects like call_function(&CSTR_CS("some string"));
+CSTR_LVALUE for the documentation. This allows to call functions, that
+accept cstr-objects like cstr_some_func(CSTR_CS("some string"));
 
 .SH FILES
 .I /usr/include/libcstr.h
@@ -211,7 +181,3 @@ David Herrmann <dh.herrmann@googlemail.com>
 .BR cstr_new (3),
 .BR cstr_dup (3),
 .BR cstr_cat (3),
-.BR cstr_dir (3),
-.BR CSTR_LVALUE (3),
-.BR CSTR_LEN (3),
-.BR CSTR_VOID (3)
