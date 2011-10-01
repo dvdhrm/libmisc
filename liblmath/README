@@ -1,0 +1,39 @@
+= Linear Math Library =
+
+This is a very simple linear math library. It has a clean C API and the
+datatypes are created to be binary compatible with other math libraries. This
+library is optimized for use with OpenGL. Other applications will not find it
+very useful as its functionality is quite limited.
+
+For asm-optimized or numerical accurate math calculations, please use libraries
+like GNU MP (www.gmplib.org) or GNU GSL (www.gnu.org/s/gsl). However, for best
+compatibilty with OpenGL, this library provides a clean and easy API for all
+needed matrix and vector manipulations.
+
+There are many C++ math libraries for OpenGL applications out there, but I never
+found one with a clean C API so I decide to write my own.
+
+= Requirements =
+
+No other libraries are required. However, this library uses some C99 features so
+it might not compile with C89-only compilers.
+
+= Install =
+
+Run
+	make build
+to build the library.
+Run
+	make install
+to install the library and manpages into your system. Default prefix is /usr but
+you can change that with:
+	make install PREFIX=/usr
+Run
+	make uninstall PREFIX=/usr
+to remove the library from your system. Default prefix is again /usr and should
+be changed if you changed it during install.
+
+= License =
+
+This library is written by David Herrmann <dh.herrmann@googlemail.com> 2011 and
+the whole distribution is dedicated to the Public Domain.
