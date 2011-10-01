@@ -101,6 +101,33 @@ static inline bool lm_m4_invert(lm_m4 dest);
 extern bool lm_m4_invert_dest(lm_m4 dest, lm_m4 src);
 
 /*
+ * Matrix Stack
+ * The matrix stack allows to push and pop matrices very fast on a special
+ * stack. This allows to modify a matrix and revert the modification again by
+ * removing the top-most element.
+ * This is very similar to the matrix stack described by old OpenGL
+ * specifications. However, they recently got deprecated and removed from the
+ * standard as they are not directly part of the rendering pipeline.
+ */
+
+struct lm_stack_entry {
+	lm_m4 matrix;
+	struct lm_stack_entry *next;
+};
+
+struct lm_stack {
+	lm_m4 tip;
+	struct lm_stack_entry *stack;
+	struct lm_stack_entry *cache;
+};
+
+extern void lm_stack_init(struct lm_stack *stack);
+extern void lm_stack_destroy(struct lm_stack *stack);
+static inline bool lm_stack_is_root(struct lm_stack *stack);
+extern int lm_stack_push(struct lm_stack *stack);
+extern void lm_stack_pop(struct lm_stack *stack);
+
+/*
  * Below the source of most simple functions.
  * They are inlined to allow fast optimizations. Most of them are pretty simple
  * and will speed up a lot by inlining them.
@@ -340,6 +367,11 @@ static inline bool lm_m4_invert(lm_m4 dest)
 	ret = lm_m4_invert_dest(tmp, dest);
 	lm_m4_copy(dest, tmp);
 	return ret;
+}
+
+static inline bool lm_stack_is_root(struct lm_stack *stack)
+{
+	return !stack->stack;
 }
 
 #endif /* LM_LIBLMATH_H */

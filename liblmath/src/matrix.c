@@ -5,6 +5,7 @@
  */
 
 #include <assert.h>
+#include <errno.h>
 #include <float.h>
 #include <math.h>
 #include <stdbool.h>
@@ -85,4 +86,63 @@ bool lm_m4_invert_dest(lm_m4 dest, lm_m4 src)
 	}
 
 	return true;
+}
+
+void lm_stack_init(struct lm_stack *stack)
+{
+	lm_m4_identity(stack->tip);
+	stack->stack = NULL;
+	stack->cache = NULL;
+}
+
+void lm_stack_destroy(struct lm_stack *stack)
+{
+	struct lm_stack_entry *t;
+
+	while (stack->stack) {
+		t = stack->stack;
+		stack->stack = t->next;
+		free(t);
+	}
+
+	while (stack->cache) {
+		t = stack->cache;
+		stack->cache = t->next;
+		free(t);
+	}
+}
+
+int lm_stack_push(struct lm_stack *stack)
+{
+	struct lm_stack_entry *new;
+
+	new = stack->cache;
+	if (new) {
+		stack->cache = new->next;
+	} else {
+		new = malloc(sizeof(*new));
+		if (!new)
+			return -ENOMEM;
+	}
+
+	lm_m4_copy(new->matrix, stack->tip);
+	new->next = stack->stack;
+	stack->stack = new;
+
+	return 0;
+}
+
+void lm_stack_pop(struct lm_stack *stack)
+{
+	struct lm_stack_entry *old;
+
+	assert(stack->stack);
+
+	old = stack->stack;
+	stack->stack = old->next;
+
+	old->next = stack->cache;
+	stack->cache = old;
+
+	lm_m4_copy(stack->tip, old->matrix);
 }
